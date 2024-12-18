@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: team-managing-deployment
+  namespace: ktzv
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: team-managing
+  template:
+    metadata:
+      labels:
+        app: team-managing
+    spec:
+      containers:
+        - name: team-managing-service
+          image: ktzv/team-managing-service
+          env:
+            - name: DB_HOSTNAME
+              value: "postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: DB_NAME
+            - name: PORT
+              value: "5000"
+          ports:
+            - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: team-managing
+  namespace: ktzv
+spec:
+  selector:
+    app: team-managing
+  ports:
+    - port: 4444
+      targetPort: 5000
+  type: LoadBalancer
+
